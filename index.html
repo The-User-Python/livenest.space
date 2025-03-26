@@ -54,7 +54,7 @@
         if (loggedInUser) {
             navUser.innerHTML = `
                 <a href="#" id="userDropdown">${loggedInUser} ▼</a>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu" id="dropdownMenu">
                     <li><a href="profile.html">Edit Profile</a></li>
                     <li><a href="viewprofile.html">View Profile</a></li>
                     <li><a href="feed.html">Feeds</a></li>
@@ -65,11 +65,17 @@
             navUser.classList.add("dropdown");
 
             const userDropdown = document.getElementById("userDropdown");
-            const dropdownMenu = navUser.querySelector(".dropdown-menu");
+            const dropdownMenu = document.getElementById("dropdownMenu");
+
+            dropdownMenu.style.display = "none"; // Initially hidden
 
             userDropdown.addEventListener("click", (e) => {
                 e.preventDefault();
-                dropdownMenu.classList.toggle("show");
+                if (dropdownMenu.style.display === "none") {
+                    dropdownMenu.style.display = "block";
+                } else {
+                    dropdownMenu.style.display = "none";
+                }
             });
 
             document.getElementById("logout").addEventListener("click", () => {
@@ -79,8 +85,8 @@
             });
 
             document.addEventListener("click", (event) => {
-                if (!userDropdown.contains(event.target) && !dropdownMenu.contains(event.target)) {
-                    dropdownMenu.classList.remove("show");
+                if (!navUser.contains(event.target) && event.target !== userDropdown) {
+                    dropdownMenu.style.display = "none";
                 }
             });
         }
