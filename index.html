@@ -12,7 +12,7 @@
 <header>  
     <h1>Livenest.com</h1>  
     <nav>  
-        <ul>  
+        <ul class="nav-links">  
             <li><a href="index.html">Home</a></li>  
             <li><a href="about.html">About Us</a></li>  
             <li><a href="explore.html">Explore</a></li>  
@@ -21,6 +21,10 @@
             <li><a href="contact.html">Contact</a></li>  
             <li id="navUser"><a href="signup.html" class="highlight">Join Now</a></li>  
         </ul>  
+        <div class="search-container">  
+            <input type="text" id="searchUser" placeholder="Search Users..." autocomplete="off">  
+            <button onclick="searchUser()">Search</button>  
+        </div>  
     </nav>  
 </header>  
   
@@ -41,7 +45,7 @@
 <script>  
     const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy";   
     const BIN_ID = "67e3c7d08a456b79667cf4e8";   
-  
+
     document.addEventListener("DOMContentLoaded", () => {  
         const loggedInUser = localStorage.getItem("loggedInUser");  
         const navUser = document.getElementById("navUser");  
@@ -53,7 +57,7 @@
                     <li><a href="profile.html">Edit Profile</a></li>  
                     <li><a href="viewprofile.html">View Profile</a></li>  
                     <li><a href="login.html" id="logout">Log Out</a></li>  
-                    <li><a href="feed.html" id="logout">Feeds</a></li>  
+                    <li><a href="feed.html">Feeds</a></li>  
                 </ul>  
             `;  
             navUser.classList.add("dropdown");  
@@ -79,6 +83,38 @@
             });  
         }  
     });  
+
+    async function searchUser() {  
+        const searchTerm = document.getElementById("searchUser").value.trim().toLowerCase();  
+        if (searchTerm === "") {  
+            alert("Please enter a username to search.");  
+            return;  
+        }  
+
+        try {  
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {  
+                headers: { "X-Master-Key": API_KEY }  
+            });  
+            const data = await response.json();  
+            const users = data.record.users; // Assuming users are stored in a "users" array  
+
+            if (!users || users.length === 0) {  
+                alert("No users found in the database.");  
+                return;  
+            }  
+
+            const foundUser = users.find(user => user.username.toLowerCase() === searchTerm);  
+
+            if (foundUser) {  
+                window.location.href = `profile.html?user=${encodeURIComponent(foundUser.username)}`;  
+            } else {  
+                alert("User not found!");  
+            }  
+        } catch (error) {  
+            console.error("Error fetching users:", error);  
+            alert("There was an error searching for the user. Please try again later.");  
+        }  
+    }  
 </script>  
   
 <footer>  
