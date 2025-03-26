@@ -14,9 +14,11 @@
 
 <main id="profileContainer">
     <div class="profile-card">
+        <!-- Profile Image -->
         <div class="image-container">
             <img id="profileImage" src="default-avatar.png" alt="Profile Picture">
         </div>
+
         <h2 id="nickname">Loading...</h2>
         <p><strong>Age:</strong> <span id="age">--</span></p>
         <p><strong>Height:</strong> <span id="height">--</span> cm</p>
@@ -26,8 +28,11 @@
         <p><strong>Country:</strong> <span id="country">--</span></p>
         <p><strong>Interests:</strong> <span id="interests">--</span></p>
         <p><strong>Hobbies:</strong> <span id="hobbies">--</span></p>
+        <p><strong>Bio:</strong> <span id="bio">--</span></p>
         <p><strong>Last Online:</strong> <span id="lastOnline">--</span></p>
     </div>
+
+    <button onclick="window.location.href='editprofile.html'">Edit Profile</button>
 </main>
 
 <script>
@@ -54,8 +59,8 @@
             let user = users.find(u => u.username === loggedInUser);
 
             if (user && user.profile) {
-                let profileImage = user.profile.image ? user.profile.image.trim() : "default-avatar.png";
-                document.getElementById("profileImage").src = profileImage;
+                // Load profile data
+                document.getElementById("profileImage").src = user.profile.image || "default-avatar.png";
                 document.getElementById("nickname").textContent = user.profile.nickname || "No Nickname";
                 document.getElementById("age").textContent = user.profile.age || "--";
                 document.getElementById("height").textContent = user.profile.height || "--";
@@ -65,14 +70,14 @@
                 document.getElementById("country").textContent = user.profile.country || "--";
                 document.getElementById("interests").textContent = user.profile.interests || "--";
                 document.getElementById("hobbies").textContent = user.profile.hobbies || "--";
+                document.getElementById("bio").textContent = user.profile.bio || "No bio available";
 
-                let lastOnlineTime = user.lastOnline || "Unknown";
-                document.getElementById("lastOnline").textContent = lastOnlineTime;
-
-                // Update Last Online Time
+                // Update Last Online
                 let currentTime = new Date().toLocaleString();
+                document.getElementById("lastOnline").textContent = user.lastOnline || "Unknown";
                 user.lastOnline = currentTime;
 
+                // Save updated last online time
                 await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: "PUT",
                     headers: {
