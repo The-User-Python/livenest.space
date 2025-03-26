@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livenest.com - Connect, Explore & Thrive</title>
+    <meta name="description" content="Livenest.com is your go-to platform for building meaningful connections, exploring new opportunities, and enhancing your lifestyle. Join us today and be part of an active and engaging community.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <h1>Livenest.com</h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li id="navUser"><a href="signup.html">Signup</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <h2>Welcome to Livenest.com</h2>
+    <p>Join the Livenest community to connect, explore, and create meaningful experiences.</p>
+    <h3>What Happens When You Register?</h3>
+    <p>After signing up, you will gain access to:</p>
+    <ul>
+        <li>A personalized profile to showcase your interests.</li>
+        <li>Exclusive community events and networking opportunities.</li>
+        <li>Engaging discussions and forums tailored to your interests.</li>
+        <li>Ability to connect with like-minded individuals.</li>
+    </ul>
+    <p>Ready to get started? <a href="signup.html">Register now</a> and become a part of Livenest!</p>
+</main>
+
+<script>
+    const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy";  // JSONBin API Key
+    const BIN_ID = "67e3c7d08a456b79667cf4e8";  // JSONBin Bin ID
+
+    // Check if user is logged in
+    const loggedInUser = localStorage.getItem("loggedInUser");
+
+    if (loggedInUser) {
+        const navUser = document.getElementById("navUser");
+        navUser.innerHTML = `<a href="#" id="userDropdown">${loggedInUser} ▼</a>`;
+        navUser.classList.add("dropdown");
+
+        // Add dropdown menu
+        const dropdownMenu = document.createElement("ul");
+        dropdownMenu.classList.add("dropdown-menu");
+        dropdownMenu.innerHTML = `
+            <li><a href="profile.html">Edit Profile</a></li>
+            <li><a href="viewprofile.html">View Profile</a></li>
+            <li><a href="login.html" id="logout">Log Out</a></li>
+        `;
+
+        navUser.appendChild(dropdownMenu);
+
+        // Toggle dropdown menu
+        document.getElementById("userDropdown").addEventListener("click", (e) => {
+            e.preventDefault();
+            dropdownMenu.classList.toggle("show");
+        });
+
+        // Log out functionality
+        document.getElementById("logout").addEventListener("click", () => {
+            localStorage.removeItem("loggedInUser");
+            alert("You have been logged out successfully!");
+            window.location.href = "login.html";
+        });
+
+        // Hide dropdown if clicked outside
+        document.addEventListener("click", (event) => {
+            if (!navUser.contains(event.target)) {
+                dropdownMenu.classList.remove("show");
+            }
+        });
+    }
+</script>
+
+<footer>
+    <p>&copy; 2025 Livenest.com. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
