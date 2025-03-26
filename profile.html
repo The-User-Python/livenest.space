@@ -54,6 +54,9 @@
         <label for="hobbies">Hobbies:</label>
         <input type="text" id="hobbies" placeholder="e.g. Reading, Painting" required>
 
+        <label for="bio">Bio:</label>
+        <textarea id="bio" placeholder="Write something about yourself..." required></textarea>
+
         <button type="submit">Save Profile</button>
     </form>
 </main>
@@ -93,6 +96,7 @@
                 document.getElementById("country").value = user.profile.country || "";
                 document.getElementById("interests").value = user.profile.interests || "";
                 document.getElementById("hobbies").value = user.profile.hobbies || "";
+                document.getElementById("bio").value = user.profile.bio || "";
             }
         } catch (error) {
             console.error("Error loading profile:", error);
@@ -120,7 +124,8 @@
             nationality: document.getElementById("nationality").value.trim(),
             country: document.getElementById("country").value.trim(),
             interests: document.getElementById("interests").value.trim(),
-            hobbies: document.getElementById("hobbies").value.trim()
+            hobbies: document.getElementById("hobbies").value.trim(),
+            bio: document.getElementById("bio").value.trim()
         };
 
         try {
