@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Livenest.com - Connect, Explore & Thrive</title>
-    <meta name="description" content="Livenest.com is your go-to platform for building meaningful connections, exploring new opportunities, and enhancing your lifestyle. Join us today and be part of an active and engaging community.">
+    <meta name="description" content="Livenest.com is your go-to platform for building meaningful connections, exploring new opportunities, and enhancing your lifestyle.">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -34,6 +34,9 @@
 </main>
 
 <script>
+    const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy"; 
+    const BIN_ID = "67e3c7d08a456b79667cf4e8"; 
+
     document.addEventListener("DOMContentLoaded", () => {
         const loggedInUser = localStorage.getItem("loggedInUser");
         const navUser = document.getElementById("navUser");
@@ -42,8 +45,8 @@
             navUser.innerHTML = `
                 <a href="#" id="userDropdown">${loggedInUser} ▼</a>
                 <ul class="dropdown-menu">
-                    <li><a href="edit-profile.html">Edit Profile</a></li>
-                    <li><a href="view-profile.html">View Profile</a></li>
+                    <li><a href="profile.html">Edit Profile</a></li>
+                    <li><a href="viewprofile.html">View Profile</a></li>
                     <li><a href="#" id="logout">Log Out</a></li>
                 </ul>
             `;
@@ -60,7 +63,7 @@
             document.getElementById("logout").addEventListener("click", () => {
                 localStorage.removeItem("loggedInUser");
                 alert("You have been logged out successfully!");
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             });
 
             document.addEventListener("click", (event) => {
