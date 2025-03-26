@@ -1,197 +1,185 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Feed</title>
-    <link rel="stylesheet" href="styles.css">
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSFHZtUWSkE9ZLvhreVnrQXhDW49vWYZk",
-            authDomain: "livefeedapp-e102c.firebaseapp.com",
-            databaseURL: "https://livefeedapp-e102c-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "livefeedapp-e102c",
-            storageBucket: "livefeedapp-e102c.firebasestorage.app",
-            messagingSenderId: "228665792353",
-            appId: "1:228665792353:web:43d7274a3e355689eb1720"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        async function getIP() {
-            let response = await fetch("https://api64.ipify.org?format=json");
-            let data = await response.json();
-            return data.ip;
-        }
-
-        async function checkUserLogin() {
-            let userIP = await getIP();
-            let isLoggedIn = localStorage.getItem("userLoggedIn");
-
-            if (!isLoggedIn) {
-                document.body.style.filter = "blur(5px)";
-                alert("Please create an account or log in to access the feed.");
-                window.location.href = "login.html";
-            } else {
-                document.body.style.filter = "none";
-                let bannedUsersRef = ref(db, "bannedIPs/" + userIP);
-                get(bannedUsersRef).then(snapshot => {
-                    if (snapshot.exists()) {
-                        alert("You have been banned for violating community guidelines.");
-                        window.location.href = "index.html";
-                    }
-                });
-            }
-        }
-        checkUserLogin();
-
-        window.sendPost = async function() {
-            let username = prompt("Please confirm your name:");
-            if (!username) return alert("Username is required!");
-
-            let title = document.getElementById("title").value;
-            let description = document.getElementById("description").value;
-            let userIP = await getIP();
-
-            if (!title || !description) {
-                alert("All fields are required!");
-                return;
-            }
-
-            if (description.includes("http") || description.includes("www.")) {
-                alert("Links are not allowed!");
-                set(ref(db, "bannedIPs/" + userIP), { reason: "Posted links" });
-                window.location.href = "index.html";
-                return;
-            }
-
-            let badWords = ["badword1", "badword2", "offensiveword"];
-            if (badWords.some(word => description.toLowerCase().includes(word))) {
-                alert("Inappropriate language detected! You are banned.");
-                set(ref(db, "bannedIPs/" + userIP), { reason: "Used inappropriate language" });
-                window.location.href = "index.html";
-                return;
-            }
-
-            let postId = push(ref(db, "posts")).key;
-
-            set(ref(db, "posts/" + postId), {
-                username,
-                title,
-                description,
-                likes: 0,
-                hearts: 0,
-                laughing: 0,
-                angry: 0,
-                sad: 0,
-                reactedIPs: {},
-                userIP
-            }).then(() => {
-                document.getElementById("title").value = "";
-                document.getElementById("description").value = "";
-            });
-        };
-
-        function loadPosts() {
-            onValue(ref(db, "posts"), (snapshot) => {
-                let feed = document.getElementById("feed");
-                feed.innerHTML = "";
-
-                snapshot.forEach(child => {
-                    let data = child.val();
-                    let postId = child.key;
-
-                    let postElement = `
-                        <div class="post" id="post_${postId}">
-                            <h4>${data.title} - <small>by ${data.username}</small></h4>
-                            <p>${data.description}</p>
-                            <div class="actions">
-                                <button onclick="react('${postId}', 'likes')">👍 ${data.likes}</button>
-                                <button onclick="react('${postId}', 'hearts')">❤️ ${data.hearts}</button>
-                                <button onclick="react('${postId}', 'laughing')">😂 ${data.laughing}</button>
-                                <button onclick="react('${postId}', 'angry')">😡 ${data.angry}</button>
-                                <button onclick="react('${postId}', 'sad')">😢 ${data.sad}</button>
-                                <button onclick="deletePost('${postId}')">🗑 Delete</button>
-                            </div>
-                            <input type="text" id="comment_${postId}" placeholder="Add a comment">
-                            <input type="text" id="commenter_${postId}" placeholder="Your Name">
-                            <button onclick="addComment('${postId}')">Comment</button>
-                            <div id="comments_${postId}"></div>
-                        </div>
-                    `;
-                    feed.innerHTML += postElement;
-                    loadComments(postId);
-                });
-            });
-        }
-
-        window.react = async function(postId, type) {
-            let userIP = await getIP();
-
-            get(ref(db, "posts/" + postId)).then(snapshot => {
-                if (snapshot.exists()) {
-                    let postData = snapshot.val();
-
-                    if (postData.reactedIPs?.[userIP]) return;
-
-                    postData.reactedIPs = postData.reactedIPs || {};
-                    postData.reactedIPs[userIP] = type;
-
-                    update(ref(db, "posts/" + postId), { [type]: postData[type] + 1, reactedIPs: postData.reactedIPs });
-                }
-            });
-        };
-
-        window.addComment = async function(postId) {
-            let comment = document.getElementById(`comment_${postId}`).value;
-            let commenter = document.getElementById(`commenter_${postId}`).value;
-            let userIP = await getIP();
-
-            if (!comment || !commenter) return alert("Both fields are required!");
-
-            if (comment.includes("http") || comment.includes("www.")) {
-                alert("Links are not allowed!");
-                set(ref(db, "bannedIPs/" + userIP), { reason: "Posted links" });
-                window.location.href = "index.html";
-                return;
-            }
-
-            let badWords = ["badword1", "badword2"];
-            if (badWords.some(word => comment.includes(word))) {
-                alert("Inappropriate comment detected! You are banned.");
-                set(ref(db, "bannedIPs/" + userIP), { reason: "Used inappropriate language" });
-                window.location.href = "index.html";
-                return;
-            }
-
-            let commentId = push(ref(db, "comments/" + postId)).key;
-            set(ref(db, "comments/" + postId + "/" + commentId), { commenter, comment, likes: 0 }).then(() => {
-                document.getElementById(`comment_${postId}`).value = "";
-            });
-        };
-
-        window.deletePost = function(postId) {
-            remove(ref(db, "posts/" + postId));
-        };
-
-        window.deleteComment = function(postId, commentId) {
-            remove(ref(db, "comments/" + postId + "/" + commentId));
-        };
-
-        loadPosts();
-    </script>
-</head>
-<body>
-    <h2>Live Feed</h2>
-    <input type="text" id="title" placeholder="Title"><br><br>
-    <textarea id="description" placeholder="Description"></textarea><br><br>
-    <button onclick="sendPost()">Post</button>
-    <h3>Live Feed:</h3>
-    <div id="feed"></div>
-</body>
-</html>
+<!DOCTYPE html>        
+<html lang="en">        
+<head>        
+    <meta charset="UTF-8">        
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">        
+    <title>Live Feed</title>        
+    <link rel="stylesheet" href="styles.css">        
+    
+    <script type="module">        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";        
+        import { getDatabase, ref, push, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";        
+    
+        const firebaseConfig = {        
+            apiKey: "AIzaSyDSFHZtUWSkE9ZLvhreVnrQXhDW49vWYZk",        
+            authDomain: "livefeedapp-e102c.firebaseapp.com",        
+            databaseURL: "https://livefeedapp-e102c-default-rtdb.asia-southeast1.firebasedatabase.app",        
+            projectId: "livefeedapp-e102c",        
+            storageBucket: "livefeedapp-e102c.firebasestorage.app",        
+            messagingSenderId: "228665792353",        
+            appId: "1:228665792353:web:43d7274a3e355689eb1720"        
+        };        
+    
+        const app = initializeApp(firebaseConfig);        
+        const db = getDatabase(app);        
+    
+        let userId = localStorage.getItem("userId") || Math.random().toString(36).substring(2, 15);      
+        localStorage.setItem("userId", userId);      
+    
+        async function getIP() {        
+            let response = await fetch("https://api64.ipify.org?format=json");        
+            let data = await response.json();        
+            return data.ip;        
+        }        
+    
+        window.sendPost = async function() {        
+            let username = prompt("Please confirm your name:");      
+            if (!username) return alert("Username is required!");      
+    
+            let title = document.getElementById("title").value;        
+            let description = document.getElementById("description").value;        
+    
+            if (!title || !description) {        
+                alert("All fields are required!");        
+                return;        
+            }        
+    
+            let postId = push(ref(db, "posts")).key;        
+            let userIp = await getIP();        
+    
+            set(ref(db, "posts/" + postId), {        
+                username,        
+                title,        
+                description,        
+                likes: 0,        
+                hearts: 0,        
+                laughing: 0,      
+                angry: 0,      
+                sad: 0,      
+                reactedIPs: {},      
+            }).then(() => {        
+                document.getElementById("title").value = "";        
+                document.getElementById("description").value = "";        
+            });        
+        };        
+    
+        function loadPosts() {        
+            onValue(ref(db, "posts"), (snapshot) => {        
+                let feed = document.getElementById("feed");        
+                feed.innerHTML = "";        
+    
+                snapshot.forEach(child => {        
+                    let data = child.val();        
+                    let postId = child.key;        
+    
+                    let postElement = `        
+                        <div class="post" id="post_${postId}">        
+                            <h4>${data.title} - <small>by ${data.username}</small></h4>        
+                            <p>${data.description}</p>        
+                            <div class="actions">        
+                                <button onclick="react('${postId}', 'likes')">👍 ${data.likes}</button>        
+                                <button onclick="react('${postId}', 'hearts')">❤️ ${data.hearts}</button>        
+                                <button onclick="react('${postId}', 'laughing')">😂 ${data.laughing}</button>      
+                                <button onclick="react('${postId}', 'angry')">😡 ${data.angry}</button>      
+                                <button onclick="react('${postId}', 'sad')">😢 ${data.sad}</button>      
+                                <button onclick="deletePost('${postId}')">🗑 Delete</button>        
+                            </div>        
+                            <input type="text" id="comment_${postId}" placeholder="Add a comment">        
+                            <input type="text" id="commenter_${postId}" placeholder="Your Name">        
+                            <button onclick="addComment('${postId}')">Comment</button>        
+                            <div id="comments_${postId}"></div>        
+                        </div>        
+                    `;        
+                    feed.innerHTML += postElement;        
+                    loadComments(postId);        
+                });        
+            });        
+        }        
+    
+        window.react = async function(postId, type) {        
+            let userIp = await getIP();        
+    
+            get(ref(db, "posts/" + postId)).then(snapshot => {        
+                if (snapshot.exists()) {        
+                    let postData = snapshot.val();        
+    
+                    if (postData.reactedIPs?.[userIp]) return;        
+    
+                    postData.reactedIPs = postData.reactedIPs || {};        
+                    postData.reactedIPs[userIp] = type;        
+    
+                    update(ref(db, "posts/" + postId), { [type]: postData[type] + 1, reactedIPs: postData.reactedIPs });        
+                }        
+            });        
+        };        
+    
+        window.deletePost = function(postId) {        
+            remove(ref(db, "posts/" + postId));        
+        };        
+    
+        window.addComment = function(postId) {        
+            let comment = document.getElementById(`comment_${postId}`).value;        
+            let commenter = document.getElementById(`commenter_${postId}`).value;        
+    
+            if (!comment || !commenter) return alert("Both fields are required!");        
+    
+            let inappropriateWords = ["badword1", "badword2"];        
+            if (inappropriateWords.some(word => comment.includes(word))) {        
+                alert("Inappropriate comment detected and removed.");        
+                return;        
+            }        
+    
+            let commentId = push(ref(db, "comments/" + postId)).key;        
+            set(ref(db, "comments/" + postId + "/" + commentId), { commenter, comment, likes: 0, reactedUsers: {} }).then(() => {        
+                document.getElementById(`comment_${postId}`).value = "";        
+            });        
+        };        
+    
+        function loadComments(postId) {        
+            onValue(ref(db, "comments/" + postId), (snapshot) => {        
+                let commentsDiv = document.getElementById(`comments_${postId}`);        
+                commentsDiv.innerHTML = "";        
+    
+                snapshot.forEach(child => {        
+                    let data = child.val();        
+                    let commentId = child.key;        
+    
+                    commentsDiv.innerHTML += `        
+                        <p><strong>${data.commenter}:</strong> ${data.comment}        
+                        <button onclick="likeComment('${postId}', '${commentId}')">👍 ${data.likes}</button>        
+                        <button onclick="deleteComment('${postId}', '${commentId}')">🗑</button></p>        
+                    `;        
+                });        
+            });        
+        }        
+    
+        window.likeComment = function(postId, commentId) {        
+            get(ref(db, `comments/${postId}/${commentId}`)).then(snapshot => {        
+                if (snapshot.exists()) {        
+                    let data = snapshot.val();        
+                    if (data.reactedUsers?.[userId]) return;        
+    
+                    data.reactedUsers = data.reactedUsers || {};        
+                    data.reactedUsers[userId] = true;        
+    
+                    update(ref(db, `comments/${postId}/${commentId}`), { likes: data.likes + 1, reactedUsers: data.reactedUsers });        
+                }        
+            });        
+        };        
+    
+        window.deleteComment = function(postId, commentId) {        
+            remove(ref(db, "comments/" + postId + "/" + commentId));        
+        };        
+    
+        loadPosts();        
+    </script>        
+</head>        
+<body>        
+    <h2>Live Feed</h2>        
+    <input type="text" id="title" placeholder="Title"><br><br>        
+    <textarea id="description" placeholder="Description"></textarea><br><br>        
+    <button onclick="sendPost()">Post</button>        
+    <h3>Live Feed:</h3>        
+    <div id="feed"></div>        
+</body>        
+</html> 
