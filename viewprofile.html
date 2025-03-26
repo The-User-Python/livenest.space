@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Profile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <h1>Your Profile</h1>
+</header>
+
+<main id="profileContainer">
+    <div class="profile-card">
+        <img id="profileImage" src="" alt="Profile Picture">
+        <h2 id="nickname"></h2>
+        <p><strong>Age:</strong> <span id="age"></span></p>
+        <p><strong>Height:</strong> <span id="height"></span> cm</p>
+        <p><strong>Gender:</strong> <span id="gender"></span></p>
+        <p><strong>Relationship Status:</strong> <span id="relationshipStatus"></span></p>
+        <p><strong>Nationality:</strong> <span id="nationality"></span></p>
+        <p><strong>Country:</strong> <span id="country"></span></p>
+        <p><strong>Interests:</strong> <span id="interests"></span></p>
+        <p><strong>Hobbies:</strong> <span id="hobbies"></span></p>
+        <p><strong>Last Online:</strong> <span id="lastOnline"></span></p>
+    </div>
+</main>
+
+<script>
+    const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy";
+    const BIN_ID = "67e3c7d08a456b79667cf4e8";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const loggedInUser = localStorage.getItem("loggedInUser");
+
+        if (!loggedInUser) {
+            alert("You need to log in first!");
+            window.location.href = "login.html";
+            return;
+        }
+
+        try {
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                method: "GET",
+                headers: { "X-Master-Key": API_KEY }
+            });
+
+            let data = await response.json();
+            let users = data.record.users || [];
+            let user = users.find(u => u.username === loggedInUser);
+
+            if (user && user.profile) {
+                document.getElementById("profileImage").src = user.profile.image || "default-avatar.png";
+                document.getElementById("nickname").textContent = user.profile.nickname || "No Nickname";
+                document.getElementById("age").textContent = user.profile.age || "N/A";
+                document.getElementById("height").textContent = user.profile.height || "N/A";
+                document.getElementById("gender").textContent = user.profile.gender || "N/A";
+                document.getElementById("relationshipStatus").textContent = user.profile.relationshipStatus || "N/A";
+                document.getElementById("nationality").textContent = user.profile.nationality || "N/A";
+                document.getElementById("country").textContent = user.profile.country || "N/A";
+                document.getElementById("interests").textContent = user.profile.interests || "N/A";
+                document.getElementById("hobbies").textContent = user.profile.hobbies || "N/A";
+
+                let lastOnlineTime = user.lastOnline || "Unknown";
+                document.getElementById("lastOnline").textContent = lastOnlineTime;
+
+                // Update Last Online Time
+                let currentTime = new Date().toLocaleString();
+                user.lastOnline = currentTime;
+
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": API_KEY
+                    },
+                    body: JSON.stringify({ users })
+                });
+            }
+        } catch (error) {
+            console.error("Error loading profile:", error);
+            alert("Something went wrong. Try again later.");
+        }
+    });
+</script>
+
+</body>
+</html>
