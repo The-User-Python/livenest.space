@@ -1,137 +1,170 @@
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Live Feed</title>  
-    <link rel="stylesheet" href="styles.css">  
-
-    <!-- Firebase SDK -->  
-    <script type="module">  
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";  
-        import { getDatabase, ref, push, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";  
-
-        // Firebase Configuration  
-        const firebaseConfig = {  
-            apiKey: "AIzaSyDSFHZtU...",
-            authDomain: "livefeedapp-e102c.firebaseapp.com",  
-            databaseURL: "https://livefeedapp-e102c-default-rtdb.asia-southeast1.firebasedatabase.app",  
-            projectId: "livefeedapp-e102c",  
-            storageBucket: "livefeedapp-e102c.firebaseapp.com",  
-            messagingSenderId: "228665792353",  
-            appId: "1:228665792353:web:43d7274a3e355689eb1720"  
-        };  
-
-        const app = initializeApp(firebaseConfig);  
-        const db = getDatabase(app);  
-
-        // Check if user is authenticated  
-        if (!localStorage.getItem("userID")) {  
-            window.location.href = "signup.html"; // Redirect if not signed up  
-        }  
-
-        let userID = localStorage.getItem("userID");  
-        let userIP = null;  
-
-        // Fetch User IP  
-        async function getUserIP() {  
-            let response = await fetch("https://api64.ipify.org?format=json");  
-            let data = await response.json();  
-            userIP = data.ip;  
-        }  
-        getUserIP();  
-
-        // Function to Send Post  
-        window.sendPost = function() {  
-            let username = document.getElementById("username").value;  
-            let title = document.getElementById("title").value;  
-            let description = document.getElementById("description").value;  
-
-            if (!username || !title || !description) {  
-                alert("All fields are required!");  
-                return;  
-            }  
-
-            let postId = push(ref(db, "posts")).key;  
-
-            set(ref(db, "posts/" + postId), {  
-                username,  
-                title,  
-                description,  
-                reactions: { like: 0, heart: 0, laugh: 0, sad: 0, angry: 0 },  
-                reactedIPs: {}  
-            }).then(() => {  
-                document.getElementById("username").value = "";  
-                document.getElementById("title").value = "";  
-                document.getElementById("description").value = "";  
-            });  
-        };  
-
-        // Function to Load Posts  
-        function loadPosts() {  
-            onValue(ref(db, "posts"), (snapshot) => {  
-                let feed = document.getElementById("feed");  
-                feed.innerHTML = "";  
-
-                snapshot.forEach(child => {  
-                    let data = child.val();  
-                    let postId = child.key;  
-                    let reacted = data.reactedIPs?.[userIP] ? "disabled" : "";  
-
-                    let postElement = `  
-                        <div class="post" id="post_${postId}">  
-                            <h4>${data.title} - <small>by ${data.username}</small></h4>  
-                            <p>${data.description}</p>  
-                            <div class="actions">  
-                                <button onclick="reactPost('${postId}', 'like')" ${reacted}>👍 ${data.reactions.like}</button>  
-                                <button onclick="reactPost('${postId}', 'heart')" ${reacted}>❤️ ${data.reactions.heart}</button>  
-                                <button onclick="reactPost('${postId}', 'laugh')" ${reacted}>😂 ${data.reactions.laugh}</button>  
-                                <button onclick="reactPost('${postId}', 'sad')" ${reacted}>😢 ${data.reactions.sad}</button>  
-                                <button onclick="reactPost('${postId}', 'angry')" ${reacted}>😡 ${data.reactions.angry}</button>  
-                                <button onclick="deletePost('${postId}')">🗑 Delete</button>  
-                            </div>  
-                        </div>  
-                    `;  
-                    feed.innerHTML += postElement;  
-                });  
-            });  
-        }  
-
-        // Function to React to a Post (One IP Per Post)  
-        window.reactPost = function(postId, reactionType) {  
-            get(ref(db, "posts/" + postId)).then(snapshot => {  
-                if (snapshot.exists()) {  
-                    let postData = snapshot.val();  
-                    if (postData.reactedIPs?.[userIP]) return;  
-
-                    postData.reactions[reactionType] += 1;  
-                    postData.reactedIPs[userIP] = true;  
-
-                    update(ref(db, "posts/" + postId), {  
-                        reactions: postData.reactions,  
-                        reactedIPs: postData.reactedIPs  
-                    });  
-                }  
-            });  
-        };  
-
-        // Function to Delete Post  
-        window.deletePost = function(postId) {  
-            remove(ref(db, "posts/" + postId));  
-        };  
-
-        loadPosts();  
-    </script>  
-</head>  
-<body>  
-    <h2>Live Feed</h2>  
-
-    <input type="text" id="username" placeholder="Your Name"><br><br>  
-    <input type="text" id="title" placeholder="Title"><br><br>  
-    <textarea id="description" placeholder="Description"></textarea><br><br>  
-    <button onclick="sendPost()">Post</button>  
-
-    <h3>Live Feed:</h3>  
-    <div id="feed"></div>  
-</body>  
+<!DOCTYPE html>    
+<html lang="en">    
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>Live Feed</title>    
+    <link rel="stylesheet" href="styles.css">  <!-- Link to external CSS -->    
+    
+    <!-- Firebase SDK -->    
+    <script type="module">    
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";    
+        import { getDatabase, ref, push, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";    
+    
+        const firebaseConfig = {    
+            apiKey: "AIzaSyDSFHZtUWSkE9ZLvhreVnrQXhDW49vWYZk",    
+            authDomain: "livefeedapp-e102c.firebaseapp.com",    
+            databaseURL: "https://livefeedapp-e102c-default-rtdb.asia-southeast1.firebasedatabase.app",    
+            projectId: "livefeedapp-e102c",    
+            storageBucket: "livefeedapp-e102c.firebasestorage.app",    
+            messagingSenderId: "228665792353",    
+            appId: "1:228665792353:web:43d7274a3e355689eb1720"    
+        };    
+    
+        const app = initializeApp(firebaseConfig);    
+        const db = getDatabase(app);    
+        const userId = Math.random().toString(36).substring(2, 15); // Generate random user ID for reactions    
+    
+        // Function to Send Post    
+        window.sendPost = function() {    
+            let username = document.getElementById("username").value;    
+            let title = document.getElementById("title").value;    
+            let description = document.getElementById("description").value;    
+                
+            if (!username || !title || !description) {    
+                alert("All fields are required!");    
+                return;    
+            }    
+    
+            let postId = push(ref(db, "posts")).key;    
+    
+            set(ref(db, "posts/" + postId), {    
+                username,    
+                title,    
+                description,    
+                likes: 0,    
+                hearts: 0,    
+                reactedUsers: {} // Store users who reacted    
+            }).then(() => {    
+                document.getElementById("username").value = "";    
+                document.getElementById("title").value = "";    
+                document.getElementById("description").value = "";    
+            });    
+        };    
+    
+        // Function to Load Posts in Real-time    
+        function loadPosts() {    
+            onValue(ref(db, "posts"), (snapshot) => {    
+                let feed = document.getElementById("feed");    
+                feed.innerHTML = "";    
+    
+                snapshot.forEach(child => {    
+                    let data = child.val();    
+                    let postId = child.key;    
+                        
+                    let postElement = `    
+                        <div class="post" id="post_${postId}">    
+                            <h4>${data.title} - <small>by ${data.username}</small></h4>    
+                            <p>${data.description}</p>    
+                            <div class="actions">    
+                                <button onclick="likePost('${postId}')" id="like_${postId}" ${data.reactedUsers?.[userId] ? "disabled" : ""}>    
+                                    👍 ${data.likes}    
+                                </button>    
+                                <button onclick="heartPost('${postId}')" id="heart_${postId}" ${data.reactedUsers?.[userId] ? "disabled" : ""}>    
+                                    ❤️ ${data.hearts}    
+                                </button>    
+                                <button onclick="deletePost('${postId}')">🗑 Delete</button>    
+                            </div>    
+                            <input type="text" id="comment_${postId}" placeholder="Add a comment">    
+                            <button onclick="addComment('${postId}')">Comment</button>    
+                            <div id="comments_${postId}"></div>    
+                        </div>    
+                    `;    
+                    feed.innerHTML += postElement;    
+                    loadComments(postId);    
+                });    
+            });    
+        }    
+    
+        // Function to Like Post (One Reaction Per User)    
+        window.likePost = function(postId) {    
+            get(ref(db, "posts/" + postId)).then(snapshot => {    
+                if (snapshot.exists()) {    
+                    let postData = snapshot.val();    
+                    if (postData.reactedUsers?.[userId]) return; // Prevent multiple reactions    
+    
+                    let likes = postData.likes + 1;    
+                    postData.reactedUsers = postData.reactedUsers || {};    
+                    postData.reactedUsers[userId] = "like";    
+    
+                    update(ref(db, "posts/" + postId), { likes, reactedUsers: postData.reactedUsers });    
+                }    
+            });    
+        };    
+    
+        // Function to Heart Post (One Reaction Per User)    
+        window.heartPost = function(postId) {    
+            get(ref(db, "posts/" + postId)).then(snapshot => {    
+                if (snapshot.exists()) {    
+                    let postData = snapshot.val();    
+                    if (postData.reactedUsers?.[userId]) return; // Prevent multiple reactions    
+    
+                    let hearts = postData.hearts + 1;    
+                    postData.reactedUsers = postData.reactedUsers || {};    
+                    postData.reactedUsers[userId] = "heart";    
+    
+                    update(ref(db, "posts/" + postId), { hearts, reactedUsers: postData.reactedUsers });    
+                }    
+            });    
+        };    
+    
+        // Function to Delete Post    
+        window.deletePost = function(postId) {    
+            remove(ref(db, "posts/" + postId));    
+        };    
+    
+        // Function to Add Comment    
+        window.addComment = function(postId) {    
+            let comment = document.getElementById(`comment_${postId}`).value;    
+            if (!comment) return;    
+    
+            let commentId = push(ref(db, "comments/" + postId)).key;    
+            set(ref(db, "comments/" + postId + "/" + commentId), { comment }).then(() => {    
+                document.getElementById(`comment_${postId}`).value = "";    
+            });    
+        };    
+    
+        // Function to Load Comments in Real-time    
+        function loadComments(postId) {    
+            onValue(ref(db, "comments/" + postId), (snapshot) => {    
+                let commentsDiv = document.getElementById(`comments_${postId}`);    
+                commentsDiv.innerHTML = "";    
+    
+                snapshot.forEach(child => {    
+                    let data = child.val();    
+                    let commentId = child.key;    
+                    commentsDiv.innerHTML += `<p>${data.comment} <button onclick="deleteComment('${postId}', '${commentId}')">🗑</button></p>`;    
+                });    
+            });    
+        }    
+    
+        // Function to Delete Comment    
+        window.deleteComment = function(postId, commentId) {    
+            remove(ref(db, "comments/" + postId + "/" + commentId));    
+        };    
+    
+        loadPosts(); // Load posts on page load    
+    </script>    
+</head>    
+<body>    
+    <h2>Live Feed</h2>    
+    
+    <input type="text" id="username" placeholder="Your Name"><br><br>    
+    <input type="text" id="title" placeholder="Title"><br><br>    
+    <textarea id="description" placeholder="Description"></textarea><br><br>    
+    <button onclick="sendPost()">Post</button>    
+    
+    <h3>Live Feed:</h3>    
+    <div id="feed"></div>    
+</body>    
 </html>
