@@ -14,17 +14,19 @@
 
 <main id="profileContainer">
     <div class="profile-card">
-        <img id="profileImage" src="" alt="Profile Picture">
-        <h2 id="nickname"></h2>
-        <p><strong>Age:</strong> <span id="age"></span></p>
-        <p><strong>Height:</strong> <span id="height"></span> cm</p>
-        <p><strong>Gender:</strong> <span id="gender"></span></p>
-        <p><strong>Relationship Status:</strong> <span id="relationshipStatus"></span></p>
-        <p><strong>Nationality:</strong> <span id="nationality"></span></p>
-        <p><strong>Country:</strong> <span id="country"></span></p>
-        <p><strong>Interests:</strong> <span id="interests"></span></p>
-        <p><strong>Hobbies:</strong> <span id="hobbies"></span></p>
-        <p><strong>Last Online:</strong> <span id="lastOnline"></span></p>
+        <div class="image-container">
+            <img id="profileImage" src="default-avatar.png" alt="Profile Picture">
+        </div>
+        <h2 id="nickname">Loading...</h2>
+        <p><strong>Age:</strong> <span id="age">--</span></p>
+        <p><strong>Height:</strong> <span id="height">--</span> cm</p>
+        <p><strong>Gender:</strong> <span id="gender">--</span></p>
+        <p><strong>Relationship Status:</strong> <span id="relationshipStatus">--</span></p>
+        <p><strong>Nationality:</strong> <span id="nationality">--</span></p>
+        <p><strong>Country:</strong> <span id="country">--</span></p>
+        <p><strong>Interests:</strong> <span id="interests">--</span></p>
+        <p><strong>Hobbies:</strong> <span id="hobbies">--</span></p>
+        <p><strong>Last Online:</strong> <span id="lastOnline">--</span></p>
     </div>
 </main>
 
@@ -52,16 +54,17 @@
             let user = users.find(u => u.username === loggedInUser);
 
             if (user && user.profile) {
-                document.getElementById("profileImage").src = user.profile.image || "default-avatar.png";
+                let profileImage = user.profile.image ? user.profile.image.trim() : "default-avatar.png";
+                document.getElementById("profileImage").src = profileImage;
                 document.getElementById("nickname").textContent = user.profile.nickname || "No Nickname";
-                document.getElementById("age").textContent = user.profile.age || "N/A";
-                document.getElementById("height").textContent = user.profile.height || "N/A";
-                document.getElementById("gender").textContent = user.profile.gender || "N/A";
-                document.getElementById("relationshipStatus").textContent = user.profile.relationshipStatus || "N/A";
-                document.getElementById("nationality").textContent = user.profile.nationality || "N/A";
-                document.getElementById("country").textContent = user.profile.country || "N/A";
-                document.getElementById("interests").textContent = user.profile.interests || "N/A";
-                document.getElementById("hobbies").textContent = user.profile.hobbies || "N/A";
+                document.getElementById("age").textContent = user.profile.age || "--";
+                document.getElementById("height").textContent = user.profile.height || "--";
+                document.getElementById("gender").textContent = user.profile.gender || "--";
+                document.getElementById("relationshipStatus").textContent = user.profile.relationshipStatus || "--";
+                document.getElementById("nationality").textContent = user.profile.nationality || "--";
+                document.getElementById("country").textContent = user.profile.country || "--";
+                document.getElementById("interests").textContent = user.profile.interests || "--";
+                document.getElementById("hobbies").textContent = user.profile.hobbies || "--";
 
                 let lastOnlineTime = user.lastOnline || "Unknown";
                 document.getElementById("lastOnline").textContent = lastOnlineTime;
