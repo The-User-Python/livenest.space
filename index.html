@@ -106,7 +106,7 @@
             const foundUser = users.find(user => user.username.toLowerCase() === searchTerm);  
 
             if (foundUser) {  
-                window.location.href = `profile.html?user=${encodeURIComponent(foundUser.username)}`;  
+                window.location.href = `viewprofile.html?user=${encodeURIComponent(foundUser.username)}`;  
             } else {  
                 alert("User not found!");  
             }  
