@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page</title>
+</head>
+<body>
+    <h2>Signup</h2>
+    <form id="signupForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" required>
+        <br><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" required>
+        <br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+        <br><br>
+
+        <button type="submit">Signup</button>
+    </form>
+
+    <script>
+        const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy";  // JSONBin API Key
+        const BIN_ID = "67e3c7d08a456b79667cf4e8";  // JSONBin Bin ID
+
+        document.getElementById("signupForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            let username = document.getElementById("username").value.trim();
+            let email = document.getElementById("email").value.trim();
+            let password = document.getElementById("password").value;
+
+            // 🔴 Input validation to prevent injections & errors
+            if (!/^[a-zA-Z0-9_]{4,16}$/.test(username)) {
+                alert("Username must be 4-16 characters long and contain only letters, numbers, and underscores.");
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.)+com$/.test(email)) {
+                alert("Please use a valid .com email address.");
+                return;
+            }
+
+            if (password.length < 6) {
+                alert("Password must be at least 6 characters long.");
+                return;
+            }
+
+            try {
+                // Step 1: Fetch existing user data
+                let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    method: "GET",
+                    headers: { "X-Master-Key": API_KEY }
+                });
+
+                let data = await response.json();
+                let users = data.record.users || [];
+
+                // Step 2: Check for duplicate username or email
+                if (users.some(user => user.username === username)) {
+                    alert("Username is already taken!");
+                    return;
+                }
+
+                if (users.some(user => user.email === email)) {
+                    alert("Email is already registered!");
+                    return;
+                }
+
+                // Step 3: Add new user
+                users.push({ username, email, password });
+
+                // Step 4: Update JSONBin with new user list
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": API_KEY
+                    },
+                    body: JSON.stringify({ users })
+                });
+
+                alert("Signup successful! Redirecting to homepage...");
+
+                // Step 5: Redirect to homepage
+                window.location.href = "index.html";  // Change to your actual homepage URL
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Something went wrong. Try again.");
+            }
+        });
+    </script>
+</body>
+</html>
