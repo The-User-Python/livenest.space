@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+    <h1>Edit Profile</h1>
+</header>
+
+<main>
+    <form id="editProfileForm">
+        <label for="profileImage">Profile Image URL:</label>
+        <input type="url" id="profileImage" placeholder="Enter image URL" required>
+        <br><br>
+
+        <label for="nickname">Nickname:</label>
+        <input type="text" id="nickname" required>
+        <br><br>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" min="13" max="100" required>
+        <br><br>
+
+        <label for="height">Height (cm):</label>
+        <input type="number" id="height" min="50" max="250" required>
+        <br><br>
+
+        <label for="gender">Gender:</label>
+        <select id="gender" required>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+        <br><br>
+
+        <label for="relationshipStatus">Relationship Status:</label>
+        <select id="relationshipStatus" required>
+            <option value="Single">Single</option>
+            <option value="In a Relationship">In a Relationship</option>
+            <option value="Married">Married</option>
+        </select>
+        <br><br>
+
+        <label for="nationality">Nationality:</label>
+        <input type="text" id="nationality" required>
+        <br><br>
+
+        <label for="country">Country:</label>
+        <input type="text" id="country" required>
+        <br><br>
+
+        <label for="interests">Interests:</label>
+        <input type="text" id="interests" placeholder="e.g. Sports, Music, Tech" required>
+        <br><br>
+
+        <label for="hobbies">Hobbies:</label>
+        <input type="text" id="hobbies" placeholder="e.g. Reading, Painting" required>
+        <br><br>
+
+        <button type="submit">Save Profile</button>
+    </form>
+</main>
+
+<script>
+    const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy";
+    const BIN_ID = "67e3c7d08a456b79667cf4e8";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const loggedInUser = localStorage.getItem("loggedInUser");
+
+        if (!loggedInUser) {
+            alert("You need to log in first!");
+            window.location.href = "login.html";
+            return;
+        }
+
+        try {
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                method: "GET",
+                headers: { "X-Master-Key": API_KEY }
+            });
+
+            let data = await response.json();
+            let users = data.record.users || [];
+            let user = users.find(u => u.username === loggedInUser);
+
+            if (user && user.profile) {
+                document.getElementById("profileImage").value = user.profile.image || "";
+                document.getElementById("nickname").value = user.profile.nickname || "";
+                document.getElementById("age").value = user.profile.age || "";
+                document.getElementById("height").value = user.profile.height || "";
+                document.getElementById("gender").value = user.profile.gender || "Male";
+                document.getElementById("relationshipStatus").value = user.profile.relationshipStatus || "Single";
+                document.getElementById("nationality").value = user.profile.nationality || "";
+                document.getElementById("country").value = user.profile.country || "";
+                document.getElementById("interests").value = user.profile.interests || "";
+                document.getElementById("hobbies").value = user.profile.hobbies || "";
+            }
+        } catch (error) {
+            console.error("Error loading profile:", error);
+        }
+    });
+
+    document.getElementById("editProfileForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const loggedInUser = localStorage.getItem("loggedInUser");
+        if (!loggedInUser) return;
+
+        let updatedProfile = {
+            image: document.getElementById("profileImage").value.trim(),
+            nickname: document.getElementById("nickname").value.trim(),
+            age: document.getElementById("age").value.trim(),
+            height: document.getElementById("height").value.trim(),
+            gender: document.getElementById("gender").value,
+            relationshipStatus: document.getElementById("relationshipStatus").value,
+            nationality: document.getElementById("nationality").value.trim(),
+            country: document.getElementById("country").value.trim(),
+            interests: document.getElementById("interests").value.trim(),
+            hobbies: document.getElementById("hobbies").value.trim()
+        };
+
+        try {
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                method: "GET",
+                headers: { "X-Master-Key": API_KEY }
+            });
+
+            let data = await response.json();
+            let users = data.record.users || [];
+
+            let userIndex = users.findIndex(user => user.username === loggedInUser);
+            if (userIndex !== -1) {
+                users[userIndex].profile = updatedProfile;
+            }
+
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": API_KEY
+                },
+                body: JSON.stringify({ users })
+            });
+
+            alert("Profile updated successfully!");
+            window.location.href = "viewprofile.html";
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            alert("Something went wrong. Try again.");
+        }
+    });
+</script>
+
+</body>
+</html>
