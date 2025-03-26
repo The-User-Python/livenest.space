@@ -15,8 +15,8 @@
         <ul class="nav-links">  
             <li><a href="index.html">Home</a></li>  
             <li><a href="about.html">About Us</a></li>  
-            <li><a href="explore.html">Explore</a></li>  
-            <li><a href="community.html">Community</a></li>  
+            <li><a href="explore.html">Terms</a></li>  
+            <li><a href="privacy.html">Privacy</a></li>  
             <li><a href="blog.html">Blog</a></li>  
             <li><a href="contact.html">Contact</a></li>  
             <li id="navUser"><a href="signup.html" class="highlight">Join Now</a></li>  
@@ -57,7 +57,8 @@
                     <li><a href="profile.html">Edit Profile</a></li>  
                     <li><a href="viewprofile.html">View Profile</a></li>  
                     <li><a href="login.html" id="logout">Log Out</a></li>  
-                    <li><a href="feed.html">Feeds</a></li>  
+                    <li><a href="feed.html">Feeds</a></li>
+                    <li><a href="rights.html">Your Rights!</a></li>
                 </ul>  
             `;  
             navUser.classList.add("dropdown");  
@@ -73,7 +74,7 @@
             document.getElementById("logout").addEventListener("click", () => {  
                 localStorage.removeItem("loggedInUser");  
                 alert("You have been logged out successfully!");  
-                window.location.href = "index.html";  
+                window.location.href = "login.html";  
             });  
   
             document.addEventListener("click", (event) => {  
