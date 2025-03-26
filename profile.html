@@ -14,28 +14,26 @@
 
 <main>
     <form id="editProfileForm">
-        <label for="profileImage">Profile Image URL:</label>
-        <input type="url" id="profileImage" placeholder="Enter image URL" required>
-        <br><br>
+        <!-- Profile Image Section -->
+        <div class="profile-image-container">
+            <img id="profileImagePreview" src="default-avatar.png" alt="Profile Image">
+            <input type="url" id="profileImage" placeholder="Enter image URL" required>
+        </div>
 
         <label for="nickname">Nickname:</label>
         <input type="text" id="nickname" required>
-        <br><br>
 
         <label for="age">Age:</label>
         <input type="number" id="age" min="13" max="100" required>
-        <br><br>
 
         <label for="height">Height (cm):</label>
         <input type="number" id="height" min="50" max="250" required>
-        <br><br>
 
         <label for="gender">Gender:</label>
         <select id="gender" required>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
         </select>
-        <br><br>
 
         <label for="relationshipStatus">Relationship Status:</label>
         <select id="relationshipStatus" required>
@@ -43,23 +41,18 @@
             <option value="In a Relationship">In a Relationship</option>
             <option value="Married">Married</option>
         </select>
-        <br><br>
 
         <label for="nationality">Nationality:</label>
         <input type="text" id="nationality" required>
-        <br><br>
 
         <label for="country">Country:</label>
         <input type="text" id="country" required>
-        <br><br>
 
         <label for="interests">Interests:</label>
         <input type="text" id="interests" placeholder="e.g. Sports, Music, Tech" required>
-        <br><br>
 
         <label for="hobbies">Hobbies:</label>
         <input type="text" id="hobbies" placeholder="e.g. Reading, Painting" required>
-        <br><br>
 
         <button type="submit">Save Profile</button>
     </form>
@@ -90,6 +83,7 @@
 
             if (user && user.profile) {
                 document.getElementById("profileImage").value = user.profile.image || "";
+                document.getElementById("profileImagePreview").src = user.profile.image || "default-avatar.png";
                 document.getElementById("nickname").value = user.profile.nickname || "";
                 document.getElementById("age").value = user.profile.age || "";
                 document.getElementById("height").value = user.profile.height || "";
@@ -103,6 +97,11 @@
         } catch (error) {
             console.error("Error loading profile:", error);
         }
+    });
+
+    document.getElementById("profileImage").addEventListener("input", function () {
+        let imageUrl = this.value.trim();
+        document.getElementById("profileImagePreview").src = imageUrl || "default-avatar.png";
     });
 
     document.getElementById("editProfileForm").addEventListener("submit", async function (event) {
