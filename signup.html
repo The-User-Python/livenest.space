@@ -24,8 +24,8 @@
     </form>
 
     <script>
-        const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy";  // JSONBin API Key
-        const BIN_ID = "67e3c7d08a456b79667cf4e8";  // JSONBin Bin ID
+        const API_KEY = "$2a$10$vtjAuxAXEgVLvzzWGE09kequc2apyPEh4Ke9cZHg6DIFHa0W7LUQy"; // JSONBin API Key
+        const BIN_ID = "67e3c7d08a456b79667cf4e8"; // JSONBin Bin ID
 
         document.getElementById("signupForm").addEventListener("submit", async function (event) {
             event.preventDefault();
@@ -34,7 +34,7 @@
             let email = document.getElementById("email").value.trim();
             let password = document.getElementById("password").value;
 
-            // 🔴 Input validation to prevent injections & errors
+            // 🔴 Input validation
             if (!/^[a-zA-Z0-9_]{4,16}$/.test(username)) {
                 alert("Username must be 4-16 characters long and contain only letters, numbers, and underscores.");
                 return;
@@ -51,7 +51,7 @@
             }
 
             try {
-                // Step 1: Fetch existing user data
+                // Step 1: Fetch existing users
                 let response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     method: "GET",
                     headers: { "X-Master-Key": API_KEY }
@@ -74,7 +74,7 @@
                 // Step 3: Add new user
                 users.push({ username, email, password });
 
-                // Step 4: Update JSONBin with new user list
+                // Step 4: Update JSONBin
                 await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                     method: "PUT",
                     headers: {
@@ -84,10 +84,10 @@
                     body: JSON.stringify({ users })
                 });
 
+                // Step 5: Save user session & redirect
+                localStorage.setItem("loggedInUser", username);
                 alert("Signup successful! Redirecting to homepage...");
-
-                // Step 5: Redirect to homepage
-                window.location.href = "index.html";  // Change to your actual homepage URL
+                window.location.href = "index.html";
             } catch (error) {
                 console.error("Error:", error);
                 alert("Something went wrong. Try again.");
