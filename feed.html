@@ -51,6 +51,8 @@
 
             set(ref(db, "posts/" + postId), {
                 username,
+                userId,
+                userIp,
                 title,
                 description,
                 likes: 0,
@@ -73,6 +75,7 @@
                 snapshot.forEach(child => {
                     let data = child.val();
                     let postId = child.key;
+                    let isOwner = data.userId === userId;
 
                     let postElement = `
                         <div class="post" id="post_${postId}">
@@ -84,7 +87,7 @@
                                 <button onclick="react('${postId}', 'laughing')">😂 ${data.laughing}</button>
                                 <button onclick="react('${postId}', 'angry')">😡 ${data.angry}</button>
                                 <button onclick="react('${postId}', 'sad')">😢 ${data.sad}</button>
-                                <button onclick="deletePost('${postId}')">🗑 Delete</button>
+                                ${isOwner ? `<button onclick="deletePost('${postId}')">🗑 Delete</button>` : ""}
                             </div>
                             <input type="text" id="comment_${postId}" placeholder="Add a comment">
                             <input type="text" id="commenter_${postId}" placeholder="Your Name">
@@ -93,7 +96,7 @@
                         </div>
                     `;
                     feed.innerHTML += postElement;
-                    loadComments(postId);
+                    loadComments(postId, data.userId);
                 });
             });
         }
@@ -117,7 +120,13 @@
         };
 
         window.deletePost = function(postId) {
-            remove(ref(db, "posts/" + postId));
+            get(ref(db, "posts/" + postId)).then(snapshot => {
+                if (snapshot.exists() && snapshot.val().userId === userId) {
+                    remove(ref(db, "posts/" + postId));
+                } else {
+                    alert("You can only delete your own posts!");
+                }
+            });
         };
 
         window.addComment = function(postId) {
@@ -126,25 +135,20 @@
 
             if (!comment || !commenter) return alert("Both fields are required!");
 
-            let inappropriateWords = ["badword1", "badword2"];
-            if (inappropriateWords.some(word => comment.toLowerCase().includes(word))) {
-                alert("Inappropriate comment detected and removed.");
-                return;
-            }
-
             let commentId = push(ref(db, "comments/" + postId)).key;
+
             set(ref(db, "comments/" + postId + "/" + commentId), {
                 commenter,
                 comment,
                 likes: 0,
-                reactedUsers: {}
+                userId
             }).then(() => {
                 document.getElementById(`comment_${postId}`).value = "";
                 loadComments(postId);
             });
         };
 
-        function loadComments(postId) {
+        function loadComments(postId, postOwnerId) {
             onValue(ref(db, "comments/" + postId), (snapshot) => {
                 let commentsDiv = document.getElementById(`comments_${postId}`);
                 commentsDiv.innerHTML = "";
@@ -152,11 +156,14 @@
                 snapshot.forEach(child => {
                     let data = child.val();
                     let commentId = child.key;
+                    let isCommentOwner = data.userId === userId;
+                    let isPostOwner = postOwnerId === userId;
 
                     commentsDiv.innerHTML += `
                         <p><strong>${data.commenter}:</strong> ${data.comment}
                         <button onclick="likeComment('${postId}', '${commentId}')">👍 ${data.likes}</button>
-                        <button onclick="deleteComment('${postId}', '${commentId}')">🗑</button></p>
+                        ${(isCommentOwner || isPostOwner) ? `<button onclick="deleteComment('${postId}', '${commentId}')">🗑</button>` : ""}
+                        </p>
                     `;
                 });
             });
@@ -180,7 +187,13 @@
         };
 
         window.deleteComment = function(postId, commentId) {
-            remove(ref(db, "comments/" + postId + "/" + commentId));
+            get(ref(db, `comments/${postId}/${commentId}`)).then(snapshot => {
+                if (snapshot.exists() && (snapshot.val().userId === userId || snapshot.val().postOwnerId === userId)) {
+                    remove(ref(db, "comments/" + postId + "/" + commentId));
+                } else {
+                    alert("You can only delete your own comments or comments on your post!");
+                }
+            });
         };
 
         loadPosts();
